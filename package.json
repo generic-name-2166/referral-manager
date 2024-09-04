@@ -1,0 +1,25 @@
+{
+  "name": "referral-manager",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "preview": "node dist/index.cjs",
+    "lint": "eslint .",
+    "format": "prettier -w ."
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "esbuild": "^0.23.1",
+    "eslint": "^9.9.1",
+    "prettier": "^3.3.3",
+    "typescript-eslint": "^8.4.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
