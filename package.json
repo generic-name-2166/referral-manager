@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "dev": "bun run src/index.ts",
     "build": "node build.js",
     "preview": "node dist/index.cjs",
     "lint": "eslint .",
@@ -20,6 +21,8 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "express-validator": "^7.2.0",
+    "helmet": "^7.1.0"
   }
 }
