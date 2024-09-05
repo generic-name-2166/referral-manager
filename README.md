@@ -4,5 +4,17 @@
 
 ```bash
 npm install
-node src/index.ts
+npm run build
+npm run preview
 ```
+
+# Notice
+
+This project has the following dependencies
+
+- `express`
+- `express-validator`
+- `knex`
+- `pg`
+- `helmet`
+- and others
