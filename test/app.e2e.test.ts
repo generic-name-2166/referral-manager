@@ -7,6 +7,10 @@ class MockService implements Service {
   getUser(): Promise<User | undefined> {
     return Promise.resolve(undefined);
   }
+
+  postUser(): Promise<void> {
+    return Promise.resolve(void null);
+  }
 }
 
 const service: Service = new MockService();
@@ -20,5 +24,18 @@ describe("App", () => {
 
   it("should validate post requests", async () => {
     await request(app).post("/create-referral").send({ name: "" }).expect(400);
+  });
+
+  describe("registration endpoint", () => {
+    it("should create a user on post", async () => {
+      await request(app)
+        .post("/register")
+        .send({
+          name: "John Doe",
+          phoneNumber: "+1 (415) 555‑0132",
+          email: "john@example.org",
+        })
+        .expect(201);
+    });
   });
 });

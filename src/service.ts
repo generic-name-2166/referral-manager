@@ -8,6 +8,7 @@ export interface User {
 
 export interface Service {
   getUser(): Promise<User | undefined>;
+  postUser(name: string, phoneNumber: string, email: string): Promise<void>;
 }
 
 export class RealService implements Service {
@@ -17,6 +18,13 @@ export class RealService implements Service {
     const queryBuilder = this.db<User>("user");
     const user: Promise<User | undefined> = queryBuilder.select("*").first();
     return user;
+  }
+
+  postUser(name: string, phoneNumber: string, email: string): Promise<void> {
+    const queryBuilder = this.db("user");
+    return queryBuilder
+      .insert({ name, phone_number: phoneNumber, email })
+      .into("user");
   }
 }
 
