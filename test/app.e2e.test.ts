@@ -20,5 +20,5 @@ describe("App", () => {
 
   it("should validate post requests", async () => {
     await request(app).post("/create-referral").send({ name: "" }).expect(400);
-  })
+  });
 });
