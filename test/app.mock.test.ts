@@ -37,5 +37,17 @@ describe("App", () => {
         })
         .expect(201);
     });
+
+    it("should accept referrals", async () => {
+      await request(app)
+        .post("/register")
+        .query({ referrerId: 1 })
+        .send({
+          name: "John Doe",
+          phoneNumber: "1-202-456-1111",
+          email: "john@example.org",
+        })
+        .expect(201);
+    });
   });
 });

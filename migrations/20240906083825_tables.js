@@ -6,16 +6,15 @@ function createUserTable(table) {
   table.string("name").notNullable();
   table.string("phone_number").notNullable();
   table.string("email").notNullable();
+  table.integer("referrer_id").nullable().references("id").inTable("user");
 }
 
 /**
  * @param { import("knex").Knex.CreateTableBuilder } table
  */
 function createReferralsTable(table) {
-  table.integer("referrer_id").notNullable();
-  table.integer("referee_id").notNullable();
-  table.foreign("referrer_id").references("id").inTable("user");
-  table.foreign("referee_id").references("id").inTable("user");
+  table.integer("referrer_id").notNullable().references("id").inTable("user");
+  table.integer("referee_id").notNullable().references("id").inTable("user");
 }
 
 /**

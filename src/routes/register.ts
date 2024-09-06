@@ -15,15 +15,24 @@ import type { Service } from "../service.ts";
 const schema: Schema = {
   name: {
     notEmpty: true,
+    in: "body",
   },
   phoneNumber: {
     isMobilePhone: {
       options: ["any"],
     },
+    in: "body",
   },
   email: {
     isEmail: true,
     normalizeEmail: true,
+    in: "body",
+  },
+  referrerId: {
+    optional: true,
+    isInt: true,
+    toInt: true,
+    in: "query",
   },
 };
 
@@ -44,7 +53,9 @@ async function createUser(
   const phoneNumber: string = data["phoneNumber"];
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const email: string = data["email"];
-  await service.postUser(name, phoneNumber, email);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const referrerId: number | undefined = data["referrerId"];
+  await service.postUser(name, phoneNumber, email, referrerId);
   return res.status(201).send();
 }
 
