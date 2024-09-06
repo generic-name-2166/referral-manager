@@ -32,7 +32,7 @@ describe("App", () => {
         .post("/register")
         .send({
           name: "John Doe",
-          phoneNumber: "+1 (415) 555‑0132",
+          phoneNumber: "1-202-456-1111",
           email: "john@example.org",
         })
         .expect(201);

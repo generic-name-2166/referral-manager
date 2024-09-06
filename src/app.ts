@@ -5,6 +5,7 @@ import express, {
 } from "express";
 import helmet from "helmet";
 import referral from "./routes/referral.ts";
+import register from "./routes/register.ts";
 import type { Service } from "./service.ts";
 
 const app: Application = express();
@@ -19,5 +20,6 @@ app.get("/", (_req: Request, res: Response): void => {
 
 export default function initialize(service: Service): Application {
   app.use("/create-referral", referral(service));
+  app.use("/register", register(service));
   return app;
 }

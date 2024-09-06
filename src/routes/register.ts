@@ -15,13 +15,15 @@ import type { Service } from "../service.ts";
 const schema: Schema = {
   name: {
     notEmpty: true,
-    isAlphanumeric: true,
   },
   phoneNumber: {
-    isMobilePhone: true,
+    isMobilePhone: {
+      options: ["any"],
+    },
   },
   email: {
     isEmail: true,
+    normalizeEmail: true,
   },
 };
 
@@ -43,7 +45,7 @@ async function createUser(
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const email: string = data["email"];
   await service.postUser(name, phoneNumber, email);
-  return res.status(201);
+  return res.status(201).send();
 }
 
 export default function register(service: Service): Router {
