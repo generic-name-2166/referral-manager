@@ -12,7 +12,7 @@ import {
 } from "express-validator";
 import type { Service } from "../service.ts";
 
-const schema: Schema = { email: { isEmail: true } };
+const schema: Schema = { email: { isEmail: true, in: "query" } };
 
 async function createReferral(
   req: Request,
@@ -33,7 +33,7 @@ async function createReferral(
     return res.status(404).send("no user with this email exists");
   }
 
-  // in testing, seems to identify host fine
+  // in testing seems to identify host fine
   const host: string = req.headers.host ?? "localhost:3001";
   const url = `${host}/register?referrerId=${id}`;
 

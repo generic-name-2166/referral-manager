@@ -55,6 +55,11 @@ async function createUser(
   const email: string = data["email"];
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const referrerId: number | undefined = data["referrerId"];
+
+  if ((await service.getIdByEmail(email)) !== undefined) {
+    return res.status(403).send("this email is already in use");
+  }
+
   await service.postUser(name, phoneNumber, email, referrerId);
   return res.status(201).send();
 }

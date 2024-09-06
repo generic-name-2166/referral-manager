@@ -5,7 +5,7 @@ function createUserTable(table) {
   table.increments("id");
   table.string("name").notNullable();
   table.string("phone_number").notNullable();
-  table.string("email").notNullable();
+  table.string("email").notNullable().unique();
   table.integer("referrer_id").nullable().references("id").inTable("user");
 }
 

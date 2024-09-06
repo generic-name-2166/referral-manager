@@ -27,54 +27,70 @@ describe("App", () => {
   it("should validate post requests", async () => {
     await request(app).post("/register").send({ name: "" }).expect(400);
   });
+});
 
-  describe("referral endpoint", () => {
-    it("should error if email doesn't exist", async () => {
-      await request(app)
-        .get("/create-referral")
-        .send({ email: "no@example.com" })
-        .expect(404)
-        .expect((res: Response) => {
-          expect(res.text).toMatch("no user with this email exists");
-        });
-    });
-
-    it("should return a link with the right host", async () => {
-      await request(app)
-        .get("/create-referral")
-        .send({ email: "return@example.com" })
-        .expect(200)
-        .expect((res: Response) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          const url: string = res.body.url as string;
-          // host where the tests are run
-          expect(url).toMatch(/127\.0\.0\.1:\d+\/register\?referrerId=1/);
-        });
-    });
+describe("referral endpoint", () => {
+  it("should error if email doesn't exist", async () => {
+    await request(app)
+      .get("/create-referral")
+      .query({ email: "no@example.com" })
+      .send()
+      .expect(404)
+      .expect((res: Response) => {
+        expect(res.text).toMatch("no user with this email exists");
+      });
   });
 
-  describe("registration endpoint", () => {
-    it("should create a user on post", async () => {
-      await request(app)
-        .post("/register")
-        .send({
-          name: "John Doe",
-          phoneNumber: "1-202-456-1111",
-          email: "john@example.org",
-        })
-        .expect(201);
-    });
+  it("should return a link with the right host", async () => {
+    await request(app)
+      .get("/create-referral")
+      .query({ email: "return@example.com" })
+      .send()
+      .expect(200)
+      .expect((res: Response) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const url: string = res.body.url as string;
+        // host where the tests are run
+        expect(url).toMatch(/127\.0\.0\.1:\d+\/register\?referrerId=1/);
+      });
+  });
+});
 
-    it("should accept referrals", async () => {
-      await request(app)
-        .post("/register")
-        .query({ referrerId: 1 })
-        .send({
-          name: "John Doe",
-          phoneNumber: "1-202-456-1111",
-          email: "john@example.org",
-        })
-        .expect(201);
-    });
+describe("registration endpoint", () => {
+  it("should create a user on post", async () => {
+    await request(app)
+      .post("/register")
+      .send({
+        name: "John Doe",
+        phoneNumber: "1-202-456-1111",
+        email: "john@example.org",
+      })
+      .expect(201);
+  });
+
+  it("should accept referrals", async () => {
+    await request(app)
+      .post("/register")
+      .query({ referrerId: 1 })
+      .send({
+        name: "John Doe",
+        phoneNumber: "1-202-456-1111",
+        email: "john@example.org",
+      })
+      .expect(201);
+  });
+
+  it("should forbid duplicate emails", async () => {
+    await request(app)
+      .post("/register")
+      .send({
+        name: "a",
+        phoneNumber: "1-202-456-1111",
+        email: "return@example.org",
+      })
+      .expect(403)
+      .expect((res: Response) => {
+        expect(res.text).toMatch("this email is already in use");
+      });
   });
 });
