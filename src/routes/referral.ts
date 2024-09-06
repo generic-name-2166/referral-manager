@@ -12,7 +12,7 @@ import {
 } from "express-validator";
 import type { Service } from "../service.ts";
 
-const schema: Schema = { name: { notEmpty: true, escape: true, in: "body" } };
+const schema: Schema = { email: { isEmail: true } };
 
 async function createReferral(
   req: Request,
@@ -24,10 +24,20 @@ async function createReferral(
     return res.status(400).send({ errors: errors.array() });
   }
 
-  console.log(await service.getUser());
-
   const data = matchedData(req);
-  return res.send(`creating a referral link from ${data["name"]}`);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const email: string = data["email"];
+
+  const id: number | undefined = await service.getIdByEmail(email);
+  if (id === undefined) {
+    return res.status(404).send("no user with this email exists");
+  }
+
+  // in testing, seems to identify host fine
+  const host: string = req.headers.host ?? "localhost:3001";
+  const url = `${host}/register?referrerId=${id}`;
+
+  return res.send({ url });
 }
 
 export default function register(service: Service): Router {
@@ -37,7 +47,7 @@ export default function register(service: Service): Router {
   const handler = ((req: Request, res: Response) =>
     createReferral(req, res, service)) as RequestHandler;
 
-  router.post("/", checkSchema(schema), handler);
+  router.get("/", checkSchema(schema), handler);
 
   return router;
 }

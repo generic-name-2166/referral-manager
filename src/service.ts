@@ -1,6 +1,6 @@
 import type { Knex } from "knex";
 
-export interface User {
+interface User {
   name: string;
   phoneNumber: string;
   email: string;
@@ -17,7 +17,7 @@ interface DbReferral {
 }
 
 export interface Service {
-  getUser(): Promise<User | undefined>;
+  getIdByEmail(email: string): Promise<number | undefined>;
   postUser(
     name: string,
     phoneNumber: string,
@@ -39,10 +39,13 @@ async function checkId(knex: Knex, id: number): Promise<boolean> {
 export class RealService implements Service {
   constructor(private db: Knex) {}
 
-  getUser(): Promise<User | undefined> {
-    const queryBuilder = this.db<User>("user");
-    const user: Promise<User | undefined> = queryBuilder.select("*").first();
-    return user;
+  async getIdByEmail(email: string): Promise<number | undefined> {
+    const queryBuilder = this.db<DbUser>("user");
+    const user = (await queryBuilder
+      .select("id")
+      .where("email", email)
+      .first()) satisfies Pick<DbUser, "id"> | undefined;
+    return user?.id;
   }
 
   async postUser(
