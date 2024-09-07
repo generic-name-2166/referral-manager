@@ -98,10 +98,7 @@ describe("referral endpoint", () => {
       .send()
       .expect(200)
       .expect((res: Response) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        const url: string = res.body.url as string;
-        // host where the tests are run
-        expect(url).toMatch(/127\.0\.0\.1:\d+\/register\?referrerId=1/);
+        expect(res.text).toMatch(/127\.0\.0\.1:\d+\/register\?referrerId=1/);
       });
   });
 

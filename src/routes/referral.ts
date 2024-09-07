@@ -21,7 +21,7 @@ async function createReferral(
   const host: string = req.headers.host ?? "localhost:3001";
   const url = `${host}/register?referrerId=${id}`;
 
-  return res.send({ url });
+  return res.send(url);
 }
 
 export default function register(service: Service): Router {
