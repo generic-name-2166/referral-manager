@@ -7,7 +7,6 @@ function createUserTable(table) {
   table.string("phone_number").notNullable();
   table.string("email").notNullable().unique();
   table.text("hashed_password").notNullable();
-  table.integer("referrer_id").nullable().references("id").inTable("user");
 }
 
 /**
@@ -15,7 +14,21 @@ function createUserTable(table) {
  */
 function createReferralsTable(table) {
   table.integer("referrer_id").notNullable().references("id").inTable("user");
-  table.integer("referee_id").notNullable().references("id").inTable("user");
+  table
+    .integer("referee_id")
+    .notNullable()
+    .unique()
+    .references("id")
+    .inTable("user");
+}
+
+/**
+ * @param { import("knex").Knex.CreateTableBuilder } table
+ */
+function createPaymentTable(table) {
+  table.increments("id");
+  table.smallint("course_id").notNullable();
+  table.integer("student_id").notNullable();
 }
 
 /**
@@ -25,7 +38,8 @@ function createReferralsTable(table) {
 export function up(knex) {
   return knex.schema
     .createTable("user", createUserTable)
-    .createTable("referrals", createReferralsTable);
+    .createTable("referrals", createReferralsTable)
+    .createTable("payment", createPaymentTable);
 }
 
 /**
@@ -33,5 +47,8 @@ export function up(knex) {
  * @returns { Promise<void> }
  */
 export function down(knex) {
-  return knex.schema.dropTableIfExists("referrals").dropTableIfExists("user");
+  return knex.schema
+    .dropTableIfExists("referrals")
+    .dropTableIfExists("payment")
+    .dropTableIfExists("user");
 }

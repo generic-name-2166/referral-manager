@@ -23,6 +23,21 @@ interface DbReferral {
   referee_id: number;
 }
 
+interface Payment {
+  course_id: number;
+  student_id: number;
+}
+
+interface DbPayment extends Payment {
+  id: number;
+}
+
+export const enum PurchaseResult {
+  IncorrectInfo,
+  AlreadyOwned,
+  Success,
+}
+
 export interface Service {
   getIdByEmail(email: string): Promise<number | undefined>;
   postUser(
@@ -36,16 +51,21 @@ export interface Service {
    * @returns token of the signed in user or null if user wasn't found
    */
   signIn(email: string, password: string): Promise<string | null>;
+  processPayment(
+    studentId: number,
+    courseId: number,
+    cardNumber: string,
+    expiryDate: string,
+  ): Promise<PurchaseResult>;
 }
 
-/**
- * @returns `true` if `id` exists in the db
- */
-async function checkId(knex: Knex, id: number): Promise<boolean> {
-  const row: User | undefined = await knex<User>("user")
-    .where("id", id)
-    .first();
-  return Boolean(row);
+function checkPaymentInfo(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _cardNumber: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _expiryDate: string,
+): Promise<boolean> {
+  return Promise.resolve(true);
 }
 
 export class RealService implements Service {
@@ -58,6 +78,16 @@ export class RealService implements Service {
       .where("email", email)
       .first()) satisfies Pick<DbUser, "id"> | undefined;
     return user?.id;
+  }
+
+  /**
+   * @returns `true` if `id` exists in the db
+   */
+  private async checkId(id: number): Promise<boolean> {
+    const row: User | undefined = await this.db<User>("user")
+      .where("id", id)
+      .first();
+    return Boolean(row);
   }
 
   async postUser(
@@ -76,16 +106,16 @@ export class RealService implements Service {
           phone_number: phoneNumber,
           email,
           hashed_password: hashedPassword,
-          referrer_id: referrerId,
         })
         .into("user");
-    } else if (!(await checkId(this.db, referrerId))) {
+    } else if (!(await this.checkId(referrerId))) {
       // check if referrer id exists to satisfy foreign key constraint
       return this.db<DbUser>("user")
         .insert({
           name,
           phone_number: phoneNumber,
           email,
+          hashed_password: hashedPassword,
         })
         .into("user");
     }
@@ -95,7 +125,7 @@ export class RealService implements Service {
         name,
         phone_number: phoneNumber,
         email,
-        referrer_id: referrerId,
+        hashed_password: hashedPassword,
       })) satisfies Pick<DbUser, "id">[]
     )[0].id;
 
@@ -123,6 +153,46 @@ export class RealService implements Service {
       return null;
     }
     return generateAccessToken(email);
+  }
+
+  /**
+   * @returns whether the student already owns the course
+   */
+  private async checkCourseExists(
+    studentId: number,
+    courseId: number,
+  ): Promise<boolean> {
+    const row: DbPayment | undefined = await this.db<DbPayment>("payment")
+      .where("course_id", courseId)
+      .andWhere("student_id", studentId)
+      .first();
+    return Boolean(row);
+  }
+
+  async processPayment(
+    studentId: number,
+    courseId: number,
+    cardNumber: string,
+    expiryDate: string,
+  ): Promise<PurchaseResult> {
+    const [correct, purchasable] = await Promise.all([
+      checkPaymentInfo(cardNumber, expiryDate),
+      this.checkCourseExists(studentId, courseId),
+    ]);
+
+    // mock function
+    if (!correct) {
+      return PurchaseResult.IncorrectInfo;
+    } else if (purchasable) {
+      return PurchaseResult.AlreadyOwned;
+    }
+
+    await this.db<Payment>("payment").insert({
+      course_id: courseId,
+      student_id: studentId,
+    });
+
+    return PurchaseResult.Success;
   }
 }
 

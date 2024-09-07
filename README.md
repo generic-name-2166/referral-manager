@@ -8,7 +8,7 @@ API for managing a referral program
 
 ### `GET` request
 
-Create a referral link to sign up. 
+Create a referral link to sign up.
 
 Requires the user to be authenticated
 
@@ -47,7 +47,7 @@ curl --request POST \
 
 ### `POST` request
 
-Get a new bearer token for an existing user. 
+Get a new bearer token for an existing user.
 
 Takes `email` and `password` fields
 
@@ -60,6 +60,39 @@ curl --request POST \
   --data '{
   "email": "john@example.org",
   "password": "a"
+}'
+```
+
+## `/courses`
+
+### `GET` request
+
+Get an array of available courses
+
+#### Example
+
+```bash
+curl --request GET \
+  --url http://localhost:3000/courses \
+```
+
+### `POST` request
+
+Purchase a course.
+
+Takes `cardNumber` and `expiryDate` fields. Requires to be authenticated
+
+#### Example
+
+```bash
+curl --request POST \
+  --url http://localhost:3000/courses \
+  --header 'Authorization: Bearer <token>' \
+  --header 'content-type: application/json' \
+  --data '{
+  "cardNumber": "4242424242424242",
+  "expiryDate": "12/34",
+  "courseId": 0
 }'
 ```
 

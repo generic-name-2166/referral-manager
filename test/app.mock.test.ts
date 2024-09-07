@@ -1,8 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import request, { type Response } from "supertest";
 import initialize from "../src/app.ts";
-import type { Service } from "../src/service.ts";
+import { PurchaseResult, type Service } from "../src/service.ts";
 import { generateAccessToken } from "../src/auth.ts";
+import type { Course } from "../src/routes/payment.ts";
 
 class MockService implements Service {
   getIdByEmail: (email: string) => Promise<number | undefined> = vi.fn(
@@ -20,6 +21,30 @@ class MockService implements Service {
       Promise.resolve(
         email.startsWith("return") ? generateAccessToken(email) : null,
       ),
+  );
+
+  processPayment: (
+    studentId: number,
+    courseId: number,
+    cardNumber: string,
+    expiryDate: string,
+  ) => Promise<PurchaseResult> = vi.fn(
+    (
+      _studentId: number,
+      _courseId: number,
+      _cardNumber: string,
+      expiryDate: string,
+    ) => {
+      let result: PurchaseResult;
+      if (expiryDate.endsWith("incorrect")) {
+        result = PurchaseResult.IncorrectInfo;
+      } else if (expiryDate.endsWith("owned")) {
+        result = PurchaseResult.AlreadyOwned;
+      } else {
+        result = PurchaseResult.Success;
+      }
+      return Promise.resolve(result);
+    },
   );
 }
 
@@ -66,7 +91,6 @@ async function signUp(email: string, existing: boolean): Promise<string> {
 describe("referral endpoint", () => {
   it("should return a link with the right host", async () => {
     const existing = await signUp("return@example.org", true);
-    console.log(existing);
 
     await request(app)
       .get("/create-referral")
@@ -151,6 +175,70 @@ describe("registration endpoint", () => {
       .expect(401)
       .expect((res: Response) => {
         expect(res.text).toMatch("incorrect email or password");
+      });
+  });
+});
+
+describe("payment endpoint", () => {
+  let token: string;
+
+  beforeAll(async () => {
+    token = await signUp("return@example.org", true);
+  });
+
+  it("should list available courses", async () => {
+    await request(app)
+      .get("/courses")
+      .auth(token, { type: "bearer" })
+      .send()
+      .expect(200)
+      .expect((res: Response) => {
+        const body = res.body as { courses: Course[] };
+        expect(Array.isArray(body.courses)).toBe(true);
+        expect(body.courses[0].id).toBeTypeOf("number");
+        expect(body.courses[0].name).toBeTypeOf("string");
+      });
+  });
+
+  it("should accept payment info", async () => {
+    await request(app)
+      .post("/courses")
+      .auth(token, { type: "bearer" })
+      .send({
+        cardNumber: "4242424242424242",
+        expiryDate: "12/34",
+        courseId: 0,
+      })
+      .expect(201);
+  });
+
+  it("should fail incorrect payment info", async () => {
+    await request(app)
+      .post("/courses")
+      .auth(token, { type: "bearer" })
+      .send({
+        cardNumber: "4242424242424242",
+        expiryDate: "12/34incorrect",
+        courseId: 0,
+      })
+      .expect(400)
+      .expect((res: Response) => {
+        expect(res.text).toMatch("incorrect payment information");
+      });
+  });
+
+  it("should fail buying an already owned course", async () => {
+    await request(app)
+      .post("/courses")
+      .auth(token, { type: "bearer" })
+      .send({
+        cardNumber: "4242424242424242",
+        expiryDate: "12/34owned",
+        courseId: 0,
+      })
+      .expect(409)
+      .expect((res: Response) => {
+        expect(res.text).toMatch("you already own this course");
       });
   });
 });
