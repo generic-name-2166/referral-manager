@@ -8,14 +8,16 @@ API for managing a referral program
 
 ### `GET` request
 
-Create a referral link to sign up.
+Create a referral link to sign up. 
 
-Takes in an `email` field of the referrer
+Requires the user to be authenticated
 
 #### Example
 
 ```bash
-curl "http:localhost:3000/create-referral?email=johndoe@example.org"
+curl --request GET \
+  --url http://localhost:3000/create-referral \
+  --header 'Authorization: Bearer <token>'
 ```
 
 ## `/register`
@@ -24,17 +26,41 @@ curl "http:localhost:3000/create-referral?email=johndoe@example.org"
 
 Sign up to create a new user.
 
-Takes in `name`, `phoneNumber` and `email` fields to create a user.
+Takes `name`, `phoneNumber`, `email` and `password` fields to create a user.
 1 email can only be used for 1 user.
 
 #### Example
 
-```json
-{
+```bash
+curl --request POST \
+  --url http://localhost:3000/register \
+  --header 'content-type: application/json' \
+  --data '{
+  "email": "john@example.org",
   "name": "John Doe",
   "phoneNumber": "1-202-456-1111",
-  "email": "johndoe@example.org"
-}
+  "password": "a"
+}'
+```
+
+## `/register/renew`
+
+### `POST` request
+
+Get a new bearer token for an existing user. 
+
+Takes `email` and `password` fields
+
+### Example
+
+```bash
+curl --request POST \
+  --url http://localhost:3000/register/renew \
+  --header 'content-type: application/json' \
+  --data '{
+  "email": "john@example.org",
+  "password": "a"
+}'
 ```
 
 # How to build and run
@@ -54,4 +80,6 @@ This project has the following dependencies
 - `knex`
 - `pg`
 - `helmet`
+- `jsonwebtoken`
+- `bcryptjs`
 - and others

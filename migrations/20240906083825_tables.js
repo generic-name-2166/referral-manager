@@ -6,6 +6,7 @@ function createUserTable(table) {
   table.string("name").notNullable();
   table.string("phone_number").notNullable();
   table.string("email").notNullable().unique();
+  table.text("hashed_password").notNullable();
   table.integer("referrer_id").nullable().references("id").inTable("user");
 }
 
