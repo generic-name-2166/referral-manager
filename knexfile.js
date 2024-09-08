@@ -35,9 +35,10 @@ export default {
   production: {
     client: "postgresql",
     connection: {
+      host: "referral-postgres",
       database: "referral_manager",
-      user: "username",
-      password: "password",
+      user: "postgres",
+      password: "postgres",
     },
     pool: {
       min: 2,

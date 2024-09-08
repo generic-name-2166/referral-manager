@@ -4,7 +4,7 @@ export default function setup(): Knex {
   return knex({
     client: "pg",
     connection: {
-      host: "localhost",
+      host: process.env["POSTGRES_HOST"] ?? "localhost",
       port: 5432,
       user: "postgres",
       password: "postgres",

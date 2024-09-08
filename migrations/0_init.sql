@@ -1,1 +1,1 @@
-CREATE TABLE referral_manager;
+CREATE DAtABASE referral_manager;

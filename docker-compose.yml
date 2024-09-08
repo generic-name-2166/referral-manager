@@ -1,0 +1,25 @@
+services:
+  referral_manager:
+    image: referral-manager
+    pull_policy: never
+    container_name: referral-manager
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: runner
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres
+  
+  postgres:
+    image: postgres:16-alpine
+    container_name: referral-postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  pgdata:
