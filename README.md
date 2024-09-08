@@ -112,6 +112,14 @@ curl --request GET \
   --header 'Authorization: Bearer <token>'
 ```
 
+# Features
+
+Additionally this porject implements
+
+- input data validation
+- authentication and authorization
+- testing
+
 # How to build and run
 
 ```bash
