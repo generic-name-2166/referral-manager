@@ -122,6 +122,14 @@ Additionally this porject implements
 
 # How to build and run
 
+With docker
+
+```bash
+docker compose up --build
+```
+
+otherwise with your own database on `localhost`
+
 ```bash
 npm install
 npm run build
