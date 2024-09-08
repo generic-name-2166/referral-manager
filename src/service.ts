@@ -1,12 +1,10 @@
 import type { Knex } from "knex";
 import { comparePassword, generateAccessToken, hashPassword } from "./auth.ts";
 
-interface User {
+export interface User {
   name: string;
   phoneNumber: string;
   email: string;
-  referrerId: number | undefined;
-  hashed_password: string;
 }
 
 interface DbUser {
@@ -16,11 +14,6 @@ interface DbUser {
   email: string;
   referrer_id: number | undefined;
   hashed_password: string;
-}
-
-interface DbReferral {
-  referrer_id: number;
-  referee_id: number;
 }
 
 interface Payment {
@@ -57,6 +50,10 @@ export interface Service {
     cardNumber: string,
     expiryDate: string,
   ): Promise<PurchaseResult>;
+  /**
+   * @returns a list of users that were referred by current user
+   */
+  getReferees(email: string): Promise<User[]>;
 }
 
 function checkPaymentInfo(
@@ -84,7 +81,7 @@ export class RealService implements Service {
    * @returns `true` if `id` exists in the db
    */
   private async checkId(id: number): Promise<boolean> {
-    const row: User | undefined = await this.db<User>("user")
+    const row: DbUser | undefined = await this.db<DbUser>("user")
       .where("id", id)
       .first();
     return Boolean(row);
@@ -99,39 +96,22 @@ export class RealService implements Service {
   ): Promise<void> {
     const hashedPassword = await hashPassword(password);
 
-    if (referrerId === undefined) {
-      return this.db<DbUser>("user")
-        .insert({
-          name,
-          phone_number: phoneNumber,
-          email,
-          hashed_password: hashedPassword,
-        })
-        .into("user");
-    } else if (!(await this.checkId(referrerId))) {
+    if (referrerId === undefined || !(await this.checkId(referrerId))) {
       // check if referrer id exists to satisfy foreign key constraint
-      return this.db<DbUser>("user")
-        .insert({
-          name,
-          phone_number: phoneNumber,
-          email,
-          hashed_password: hashedPassword,
-        })
-        .into("user");
-    }
-
-    const refereeId: number = (
-      (await this.db("user").returning("id").insert({
+      return this.db<DbUser>("user").insert({
         name,
         phone_number: phoneNumber,
         email,
         hashed_password: hashedPassword,
-      })) satisfies Pick<DbUser, "id">[]
-    )[0].id;
+      });
+    }
 
-    return this.db<DbReferral>("referrals").insert({
+    return this.db<DbUser>("user").insert({
+      name,
+      phone_number: phoneNumber,
+      email,
+      hashed_password: hashedPassword,
       referrer_id: referrerId,
-      referee_id: refereeId,
     });
   }
 
@@ -193,6 +173,22 @@ export class RealService implements Service {
     });
 
     return PurchaseResult.Success;
+  }
+
+  getReferees(email: string): Promise<User[]> {
+    const user: Promise<User[]> = this.db<DbUser>({
+      referee: "user",
+    })
+      .leftJoin("user AS referrer", function() {
+        this.on("referrer.id", "=", "referee.referrer_id");
+      })
+      .select({
+        name: "referee.name",
+        phoneNumber: "referee.phone_number",
+        email: "referee.email",
+      })
+      .where("referrer.email", email);
+    return user;
   }
 }
 

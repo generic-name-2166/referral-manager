@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import request, { type Response } from "supertest";
 import initialize from "../src/app.ts";
-import { PurchaseResult, type Service } from "../src/service.ts";
+import { PurchaseResult, type Service, type User } from "../src/service.ts";
 import { generateAccessToken } from "../src/auth.ts";
 import type { Course } from "../src/routes/payment.ts";
 
@@ -45,6 +45,20 @@ class MockService implements Service {
       }
       return Promise.resolve(result);
     },
+  );
+
+  getReferees = vi.fn((email: string) =>
+    Promise.resolve(
+      email.startsWith("return")
+        ? [
+            {
+              name: "Name 1",
+              phoneNumber: "Phone 1",
+              email: "Email 1",
+            },
+          ]
+        : [],
+    ),
   );
 }
 
@@ -236,6 +250,40 @@ describe("payment endpoint", () => {
       .expect(409)
       .expect((res: Response) => {
         expect(res.text).toMatch("you already own this course");
+      });
+  });
+});
+
+describe("statistics endpoint", () => {
+  it("should authenticate", async () => {
+    await request(app).get("/statistics").expect(401);
+  });
+
+  it("should respond to authenticated user", async () => {
+    const token = await signUp("johndoe@example.org", false);
+
+    await request(app)
+      .get("/statistics")
+      .auth(token, { type: "bearer" })
+      .expect(200)
+      .expect((res: Response) => {
+        expect(Array.isArray(res.body)).toBe(true);
+        expect((res.body as User[]).length).toEqual(0);
+      });
+  });
+
+  it("should list referees", async () => {
+    const token = await signUp("return@example.org", true);
+
+    await request(app)
+      .get("/statistics")
+      .auth(token, { type: "bearer" })
+      .expect(200)
+      .expect((res: Response) => {
+        const body = res.body as User[];
+        expect(Array.isArray(body)).toBe(true);
+        expect(body.length).toEqual(1);
+        expect(body[0].email).toMatch("Email 1");
       });
   });
 });

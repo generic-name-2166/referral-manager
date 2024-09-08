@@ -96,6 +96,22 @@ curl --request POST \
 }'
 ```
 
+## `/statistics`
+
+### `GET` request
+
+Get all referees of the current user.
+
+Requires the user to be authenticated
+
+#### Example
+
+```bash
+curl --request GET \
+  --url http://localhost:3000/statistics \
+  --header 'Authorization: Bearer <token>'
+```
+
 # How to build and run
 
 ```bash
